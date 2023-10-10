@@ -1,16 +1,35 @@
 import argparse
+from enum import Enum
 from typing import List
 
 import requests
 from bs4 import BeautifulSoup
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
+LOCATION = 22
+
+
+class DishColors(Enum):
+    HEIMSPIEL = "C92423"
+    QUERBEET = "429E12"
+    STREETFOOD = "E36B0D"
+    WORLDWIDE = "0A82A8"
+    MEISTERWERK = "7D7869"
+
+
+class DishIcons(Enum):
+    HEIMSPIEL = "🍖"
+    QUERBEET = "🌿"
+    STREETFOOD = "🌭"
+    WORLDWIDE = "🗺️"
+    MEISTERWERK = "👑"
 
 class Dish:
-    def __init__(self, name: str, description: str, image_url: str):
+    def __init__(self, name: str, description: str, image_url: str, color: str):
         self.name = name
         self.description = description
         self.image_url = image_url
+        self.color = color
 
     def __eq__(self, other):
         return self.name == other.name
@@ -19,33 +38,33 @@ class Dish:
         return hash(self.name)
 
 
-def fetch_dishes() -> List[Dish]:
+def fetch_dishes(location) -> List[Dish]:
     url = "https://www.kstw.de/speiseplan?l=22"
     res = requests.get(url)
     res.raise_for_status()
     soup = BeautifulSoup(res.text, 'html.parser')
     dishes = []
-    location = soup.find("div", {"class": "tx-epwerkmenu-menu-location-wrapper", "data-location": 22})
+    location = soup.find("div", {"class": "tx-epwerkmenu-menu-location-wrapper", "data-location": location})
     for menu_tile in location.find_all("div", {"class": "col-12 col-lg-6 mb-4 menue-tile"}):
         plate = menu_tile.find("div", {"class": "plate"})
+        category = menu_tile['data-category']
         dishes.append(Dish(
-            name=menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-title"}).get_text(strip=True),
+            name=f'{DishIcons[category].value} {menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-title"}).get_text(strip=True)}',
             description=menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-description"}).get_text(strip=True),
-            image_url=plate.find("img")["src"]
+            image_url=plate.find("img")["src"] if plate else None,
+            color=DishColors[category].value
         ))
     return list(set(dishes))
 
-
 def send_webhook(webhook_url):
-    dishes = fetch_dishes()
+    dishes = fetch_dishes(LOCATION)
     if not dishes:
         return
-    kinds = ["VEGAN", "VEGETARISCH"]
     embeds = []
     for dish in dishes:
-        color = "429E12" if any([x in dish.name for x in kinds]) else "C92423"
-        embed = DiscordEmbed(title=dish.name, description=dish.description, color=color)
-        embed.set_image(dish.image_url)
+        embed = DiscordEmbed(title=dish.name, description=dish.description, color=dish.color)
+        if dish.image_url:
+            embed.set_image(dish.image_url)
         embeds.append(embed)
     webhook = DiscordWebhook(url=webhook_url)
     for embed in embeds:
