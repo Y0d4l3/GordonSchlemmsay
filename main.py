@@ -7,22 +7,22 @@ from bs4 import BeautifulSoup
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
 LOCATION = 22
+URL = "https://www.kstw.de/speiseplan"
 
 
-class DishColors(Enum):
-    HEIMSPIEL = "C92423"
-    QUERBEET = "429E12"
-    STREETFOOD = "E36B0D"
-    WORLDWIDE = "0A82A8"
-    MEISTERWERK = "7D7869"
+class DishStyle(Enum):
+    HEIMSPIEL = ("C92423", "🍖")
+    QUERBEET = ("429E12", "🌿")
+    STREETFOOD = ("E36B0D", "🌭")
+    WORLDWIDE = ("0A82A8", "🗺️")
+    MEISTERWERK = ("7D7869", "👑")
 
+    def get_color(self):
+        return self.value[0]
 
-class DishIcons(Enum):
-    HEIMSPIEL = "🍖"
-    QUERBEET = "🌿"
-    STREETFOOD = "🌭"
-    WORLDWIDE = "🗺️"
-    MEISTERWERK = "👑"
+    def get_icon(self):
+        return self.value[1]
+
 
 class Dish:
     def __init__(self, name: str, description: str, image_url: str, color: str):
@@ -38,8 +38,7 @@ class Dish:
         return hash(self.name)
 
 
-def fetch_dishes(location) -> List[Dish]:
-    url = "https://www.kstw.de/speiseplan?l=22"
+def fetch_dishes(url, location) -> List[Dish]:
     res = requests.get(url)
     res.raise_for_status()
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -49,15 +48,16 @@ def fetch_dishes(location) -> List[Dish]:
         plate = menu_tile.find("div", {"class": "plate"})
         category = menu_tile['data-category']
         dishes.append(Dish(
-            name=f'{DishIcons[category].value} {menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-title"}).get_text(strip=True)}',
+            name=f'{DishStyle[category].get_icon()} {menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-title"}).get_text(strip=True)}',
             description=menu_tile.find("div", {"class": "tx-epwerkmenu-menu-meal-description"}).get_text(strip=True),
             image_url=plate.find("img")["src"] if plate else None,
-            color=DishColors[category].value
+            color=DishStyle[category].get_color()
         ))
     return list(set(dishes))
 
+
 def send_webhook(webhook_url):
-    dishes = fetch_dishes(LOCATION)
+    dishes = fetch_dishes(url=URL, location=LOCATION)
     if not dishes:
         return
     embeds = []
@@ -75,6 +75,6 @@ def send_webhook(webhook_url):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gordon Schlemmsay Canteen Bot")
-    parser.add_argument("--webhook", type=str, default="", help="Sets the webhook path")
+    parser.add_argument("--webhook", type=str, required=True, help="Sets the webhook path")
     args = parser.parse_args()
     send_webhook(args.webhook)
