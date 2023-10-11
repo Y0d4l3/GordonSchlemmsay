@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
 LOCATION = 22
-URL = "https://www.kstw.de/speiseplan"
+URL = "https://www.kstw.de/speiseplan/?l=22"
 
 
 class DishStyle(Enum):
