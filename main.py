@@ -71,6 +71,7 @@ def send_webhook(webhook_url):
         webhook.add_embed(embed)
     res = webhook.execute()
     res.raise_for_status()
+    print(res)
 
 
 if __name__ == "__main__":

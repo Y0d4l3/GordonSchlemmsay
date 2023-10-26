@@ -6,7 +6,7 @@ from main import send_webhook
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('cron', day_of_week='mon-fri', hour=9)
+@sched.scheduled_job('cron', day_of_week='mon-fri', hour=9, miunte=10)
 def scheduled_job():
     send_webhook(os.environ['WEBHOOK_URL'])
 
