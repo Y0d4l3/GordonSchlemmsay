@@ -1,0 +1,1 @@
+0 9 * * 0-5 python /task.py --webhook $WEBHOOK_URL >> /logfile
