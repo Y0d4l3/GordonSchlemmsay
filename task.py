@@ -70,7 +70,7 @@ def send_webhook(webhook_url):
             webhook.add_embed(embed)
 
     except:
-        webhook = DiscordWebhook(url="your webhook url", content="Webhook Message")
+        webhook = DiscordWebhook(url=webhook_url, content="Heude jibbet noeschts :(")
 
     res = webhook.execute()
     res.raise_for_status()
