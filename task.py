@@ -57,18 +57,21 @@ def fetch_dishes(url, location) -> List[Dish]:
 
 
 def send_webhook(webhook_url):
-    dishes = fetch_dishes(url=URL, location=LOCATION)
-    if not dishes:
-        return
-    embeds = []
-    for dish in dishes:
-        embed = DiscordEmbed(title=dish.name, description=dish.description, color=dish.color)
-        if dish.image_url:
-            embed.set_image(dish.image_url)
-        embeds.append(embed)
-    webhook = DiscordWebhook(url=webhook_url)
-    for embed in embeds:
-        webhook.add_embed(embed)
+    try:
+        webhook = DiscordWebhook(url=webhook_url)
+        dishes = fetch_dishes(url=URL, location=LOCATION)
+        embeds = []
+        for dish in dishes:
+            embed = DiscordEmbed(title=dish.name, description=dish.description, color=dish.color)
+            if dish.image_url:
+                embed.set_image(dish.image_url)
+            embeds.append(embed)
+        for embed in embeds:
+            webhook.add_embed(embed)
+
+    except:
+        webhook = DiscordWebhook(url="your webhook url", content="Webhook Message")
+
     res = webhook.execute()
     res.raise_for_status()
     print(res)
