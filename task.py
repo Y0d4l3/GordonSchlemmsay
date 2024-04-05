@@ -9,7 +9,7 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 
 LOCATION = 27
 BASE_URL = "https://sw-koeln.maxmanager.xyz/"
-MENU_URL = f"{BASE_URL}index.php/"
+MENU_URL = f"{BASE_URL}index.php"
 
 
 class DishStyle(Enum):
@@ -44,7 +44,6 @@ def fetch_dishes(url, location) -> List[Dish]:
     session = requests.Session()
     response = session.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-
     today = datetime.date.today().strftime("%Y-%m-%d")
     menu = soup.find("div", {"class": "container-fluid einrichtungsblock p-0 hide", "data-einrichtung": location})
 
